@@ -16,6 +16,18 @@ Install requirements and you are good to go.
 pip install -r requirements.txt
 ```
 
+## Step-by-step Procedure
+
+- This program will first query for pages using Media Wiki API to get page titles in batches (500 pages per batch - maximum page limit allowed by Media Wiki).
+
+- It then uses these titles to make html request to individual page and collect text from content field of that page.
+
+- It then stores text into file by using sentence-level segmentation  and regex to store only Burmese characters. (from unicode u1000 to u1100).
+
+- It stores one text file per batch using batch index which starts from 0.
+
+- This program will automatically resume from last batch it saved before stopping using `meta.json`.
+
 ## Usage
 
 ```
@@ -36,16 +48,6 @@ optional arguments:
                         Output directory for storing corpus (default: results)
 
 ```
-
-## Step-by-step Procedure
-
-- This program will first query for pages using Media Wiki API to get page titles in batches (500 pages per batch - maximum page limit allowed by Media Wiki).
-
-- It then uses these titles to make html request to individual page and collect text from content field of that page.
-
-- It then stores text into file by using sentence-level segmentation  and regex to store only Burmese characters. (from unicode u1000 to u1100).
-
-- It stores one text file per batch using batch index which starts from 0.
 
 
 
