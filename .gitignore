@@ -11,3 +11,5 @@ test_images/
 
 # Library
 word_breaker/
+
+**/__pycache__/**
