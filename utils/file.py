@@ -24,13 +24,12 @@ class FileUtil:
             file_object.write(line)
             file_object.write("\n")
         file_object.close()
-        self.add_storage(file_path)
 
     @staticmethod
-    def save_meta_dict(self, data, output_dir="results"):
+    def save_meta_dict(data, output_dir="results"):
         meta_path = os.path.join(os.getcwd(), output_dir, 'meta.json')
         with open(meta_path, 'w') as fp:
-            json.dump(data, fp, sort_keys=True)
+            json.dump(data, fp, sort_keys=True, ensure_ascii=False)
 
     @staticmethod
     def load_meta_dict(output_dir: str = "results") -> dict:
@@ -43,10 +42,12 @@ class FileUtil:
 
     def add_storage(self, file_path):
         # Convert bytes to mega bytes
-        file_size = os.path.getsize(file_path) / 1000
+        file_size = os.path.getsize(file_path) / 1e+6
+        print("file size:", file_size)
         self.actual_storage += file_size
 
     def check_storage(self):
+        print("actual storage", self.actual_storage)
         return self.actual_storage < self.max_storage
 
     @staticmethod

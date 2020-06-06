@@ -6,3 +6,5 @@ SPLITTER_RE = r'။'
 
 # regex for any non-burmese characters
 NON_MM_RE = r'[a-zA-Z0-9\/:&?.%\n "=↑,]+'
+
+MM_RE = r'[\u1000-\u109f]+'
