@@ -1,0 +1,13 @@
+.vscode/
+venv
+logs/
+.idea/
+
+# Artifacts
+results/
+mm_fonts/
+logs/
+test_images/
+
+# Library
+word_breaker/
