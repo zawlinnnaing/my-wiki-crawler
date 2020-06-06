@@ -3,7 +3,7 @@
 ![](https://img.shields.io/badge/python-3.6-blue.svg)
 ![](https://img.shields.io/badge/License-MIT-green)
 
-Simple program for crawling [Burmese Wikipedia](https://my.wikipedia.org) using media wiki API by querying page from "က" first and **sequentially** crawling to the specified size reaches or no more pages to crawl.
+Simple program for crawling [Burmese Wikipedia](https://my.wikipedia.org) using media wiki API by querying page from "က" first and **sequentially** crawling until specified size reaches or no more pages to crawl.
 
 [TOC]
 
