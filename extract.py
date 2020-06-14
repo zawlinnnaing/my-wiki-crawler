@@ -1,7 +1,9 @@
 import argparse
 import utils
 import urllib
+import multiprocessing as mp
 from utils.file import FileUtil
+from utils.timer import Timer
 from utils import request_api
 from requests import RequestException
 from bs4 import BeautifulSoup
@@ -18,6 +20,8 @@ parser.add_argument("-l", '--log_dir', action='store', type=str,
 # parser.add_argument('--word_seg', '-ws',
 #                     action='store_true', help='Whether to segment word on text corpus.')
 
+parser.add_argument("-cpu", "--cpu_num", type=int, help="Number of cpu to use parallelization. (default: 4)", default=4)
+
 parser.add_argument('--max_size', type=int, default=1000,
                     help="Specify max size (in MB) to crawl wiki. (default: 1000")
 
@@ -25,6 +29,8 @@ parser.add_argument("--output_dir", '-o', type=str,
                     default="results", help="Output directory for storing corpus (default: results)")
 
 args = parser.parse_args()
+
+mpPool = mp.Pool()
 
 WIKI_URL = "https://my.wikipedia.org/wiki/"
 
@@ -61,28 +67,27 @@ def process_api():
     return page_titles, json_res
 
 
+def parse_page(page_title: str, file_name: str):
+    """
+    @param page_title: Title of wiki page
+    @param file_name: File name to be saved.
+    """
+    raw_html = utils.simple_get(urllib.parse.urljoin(WIKI_URL, page_title))
+    if raw_html is not None:
+        html = BeautifulSoup(raw_html, 'html.parser')
+        content = str(html.find(id="content").get_text())
+
+        sentences = content.split("။")
+        sentences = [''.join(re.findall(MM_RE, sentence)) + "။" if sentence is not "\n" else '' for sentence
+                     in sentences]
+        file_util.save_to_txt_file(file_name, sentences,
+                                   output_dir=args.output_dir)
+    else:
+        print("article is empty. Title: {}".format(page_title))
+
+
 def crawl_wiki():
     articles_batch_idx = 0
-    # try:
-    #     start_time = time.time()
-    #     raw_html = utils.simple_get(args.url + 'ကချင်ဒီမိုကရေစီသစ် တပ်မတော်')
-    #     if raw_html is not None:
-    #         if file_util.check_storage():
-    #             html = BeautifulSoup(raw_html, 'html.parser')
-    #             content = str(html.find(id="content").text)
-    #             # print(content)
-    #             sentences = re.split(SPLITTER_RE, content)
-    #             sentences = [re.sub(NON_MM_RE, '', sentence) for sentence in sentences]
-    #             print("Content list len", len(sentences))
-    #             file_util.save_to_txt_file('test.txt', sentences)
-    #             stop_time = time.time()
-    #             print("Total time passed: ", stop_time - start_time, "sec")
-    #         else:
-    #             print("specified maximum size reached")
-    #             return
-    # except RequestException as e:
-    #     print(e)
-    #     utils.log_error(e, args.log_dir)
     meta_dict = FileUtil.load_meta_dict(args.output_dir)
     if len(list(meta_dict.keys())) > 0:
         last_key = list(meta_dict.keys())[-1]
@@ -92,24 +97,32 @@ def crawl_wiki():
 
     try:
         while file_util.check_storage():
+            start_time = time.perf_counter()
             page_titles, json_res = process_api()
             print("processing articles batch", articles_batch_idx)
             file_name = 'mywiki-batch-{}.txt'.format(articles_batch_idx)
             file_path = os.path.join(args.output_dir, file_name)
             FileUtil.delete_file(file_path)
-            for page_title in page_titles:
-                raw_html = utils.simple_get(urllib.parse.urljoin(WIKI_URL, page_title))
-                if raw_html is not None:
-                    html = BeautifulSoup(raw_html, 'html.parser')
-                    content = str(html.find(id="content").get_text())
+            # Sequential executing
+            # for page_title in page_titles:
+            # raw_html = utils.simple_get(urllib.parse.urljoin(WIKI_URL, page_title))
+            # if raw_html is not None:
+            #     html = BeautifulSoup(raw_html, 'html.parser')
+            #     content = str(html.find(id="content").get_text())
+            #
+            #     sentences = content.split("။")
+            #     sentences = [''.join(re.findall(MM_RE, sentence)) + "။" if sentence is not "\n" else '' for sentence
+            #                  in sentences]
+            #     file_util.save_to_txt_file(file_name, sentences,
+            #                                output_dir=args.output_dir)
+            # else:
+            #     print("article is empty. Title: {}".format(page_title))
 
-                    sentences = content.split("။")
-                    sentences = [''.join(re.findall(MM_RE, sentence)) + "။" if sentence is not "\n" else '' for sentence
-                                 in sentences]
-                    file_util.save_to_txt_file(file_name, sentences,
-                                               output_dir=args.output_dir)
-                else:
-                    print("article is empty. Title: {}".format(page_title))
+            # Parallel Executing
+            with Timer(articles_batch_idx):
+                with mp.Pool(args.cpu_num) as p:
+                    p.starmap(parse_page, [(page_title, file_name) for page_title in page_titles])
+
             file_util.add_storage(file_path)
             current_params['apfrom'] = json_res['continue']['apcontinue']
             meta_dict[str(articles_batch_idx)] = current_params['apfrom']
