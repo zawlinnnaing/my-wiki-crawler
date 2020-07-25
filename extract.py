@@ -4,7 +4,7 @@ import urllib
 import multiprocessing as mp
 from utils.file import FileUtil
 from utils.timer import Timer
-from utils import request_api
+from utils.helper import request_api, log_error, simple_get
 from requests import RequestException
 from bs4 import BeautifulSoup
 from utils.regex_utils import SPLITTER_RE, MM_RE
@@ -36,8 +36,6 @@ WIKI_URL = "https://my.wikipedia.org/wiki/"
 
 MEDIA_API_URL = "https://my.wikipedia.org/w/api.php"
 
-# word_segmenter = WordSegment()
-
 # Please do not change this to prevent putting load on wiki server.
 PAGES_PER_REQUEST = 500
 
@@ -47,16 +45,6 @@ current_params = {'action': 'query', 'format': 'json',
 # print(len(utils.request_api(args.url, init_params)['query']['pages']))
 
 file_util = FileUtil(args.max_size)
-
-
-# print(request_api(args.api_url, init_params))
-
-# json_res = request_api(args.api_url, init_params)
-#
-# # print(type(json_res['query']['pages']))
-#
-# for key, value in json_res['query']['pages'].items():
-#     print("Wiki title", value['title'])
 
 
 def process_api():
@@ -72,7 +60,7 @@ def parse_page(page_title: str, file_name: str):
     @param page_title: Title of wiki page
     @param file_name: File name to be saved.
     """
-    raw_html = utils.simple_get(urllib.parse.urljoin(WIKI_URL, page_title))
+    raw_html = simple_get(urllib.parse.urljoin(WIKI_URL, page_title))
     if raw_html is not None:
         html = BeautifulSoup(raw_html, 'html.parser')
         content = str(html.find(id="content").get_text())
@@ -80,8 +68,7 @@ def parse_page(page_title: str, file_name: str):
         sentences = content.split("။")
         sentences = [''.join(re.findall(MM_RE, sentence)) + "။" if sentence is not "\n" else '' for sentence
                      in sentences]
-        file_util.save_to_txt_file(file_name, sentences,
-                                   output_dir=args.output_dir)
+        FileUtil.save_to_txt_file(file_name, sentences, output_dir=args.output_dir)
     else:
         print("article is empty. Title: {}".format(page_title))
 
@@ -131,7 +118,7 @@ def crawl_wiki():
             articles_batch_idx = articles_batch_idx + 1
     except RequestException as e:
         print(e)
-        utils.log_error(e, args.log_dir)
+        log_error(e, args.log_dir)
 
 
 def add_norm_words_to_words_set(normalized_words: list, words_set: set):

@@ -53,8 +53,6 @@ optional arguments:
 
 ## TODOS
 
-- Sending Request concurrently to maximize network utilization.
-
 - Remove max_size limit.
 
 - Better filtering of burmese characters.

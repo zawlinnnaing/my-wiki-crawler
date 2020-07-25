@@ -1,12 +1,12 @@
 from requests import get
 from requests import RequestException
+from collections import OrderedDict
 from contextlib import closing
 import os
 import logging
 from .file import FileUtil
 from datetime import date
 import json
-
 
 os.chdir(os.getcwd())
 
@@ -46,6 +46,9 @@ def is_good_response(res, content_type='html'):
 
 def log_error(e: str, log_dir: str = 'logs'):
     FileUtil.mkdir_if_not_exists(log_dir)
-    log_file = os.path.join(log_dir, str(date.today())+'.log')
+    log_file = os.path.join(log_dir, str(date.today()) + '.log')
     logging.basicConfig(filename=log_file, level=logging.WARNING)
     logging.error(e)
+
+
+

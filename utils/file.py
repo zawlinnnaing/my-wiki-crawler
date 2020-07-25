@@ -3,6 +3,16 @@ import json
 from collections import OrderedDict
 
 
+def sort_meta_dict(input_dict: dict) -> OrderedDict:
+    """
+    Sorting Meta dictionary in result directory.
+    @param input_dict:
+    @return:
+    """
+    sorted_tuple = sorted(input_dict.items(), key=lambda item: int(item[0]))
+    return OrderedDict(sorted_tuple)
+
+
 class FileUtil:
     max_storage = 0
     actual_storage = 0
@@ -15,7 +25,8 @@ class FileUtil:
         if not os.path.exists(dir):
             os.mkdir(dir)
 
-    def save_to_txt_file(self, file_name, txt_iter: iter, output_dir="results"):
+    @staticmethod
+    def save_to_txt_file(file_name: str, txt_iter: iter, output_dir="results"):
         txt_dir = os.path.join(os.getcwd(), output_dir)
         FileUtil.mkdir_if_not_exists(txt_dir)
         file_path = os.path.join(txt_dir, file_name)
@@ -29,14 +40,18 @@ class FileUtil:
     def save_meta_dict(data, output_dir="results"):
         meta_path = os.path.join(os.getcwd(), output_dir, 'meta.json')
         with open(meta_path, 'w') as fp:
-            json.dump(data, fp, sort_keys=True, ensure_ascii=False)
+            json.dump(sort_meta_dict(data), fp, ensure_ascii=False)
 
     @staticmethod
     def load_meta_dict(output_dir: str = "results") -> dict:
+        """
+        @param output_dir: Output directory which contains meta
+        @return: ordered dictionary by key
+        """
         meta_path = os.path.join(os.getcwd(), output_dir, 'meta.json')
         if os.path.exists(meta_path):
             with open(meta_path, 'r') as fp:
-                return OrderedDict(sorted(json.load(fp).items()))
+                return sort_meta_dict(json.load(fp))
         else:
             return OrderedDict()
 
